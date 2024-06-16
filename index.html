@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>等值面</title>
+    <link rel="stylesheet" href="./css/openlayers.v4.6.5.min.css" type="text/css">
+    <script src="./js/openlayers.v4.6.5.min.js"></script>
+    <script src="./js/d3-contour.v1.min.js"></script>
+    <script src="./js/kriging-contour.min.js"></script>
+    <style>
+      html, body {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      body {
+        padding: 1px;
+        box-sizing: border-box;
+      }
+
+      #map {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map" class="map"></div>
+    <script>
+    const params = {
+      mapCenter: [118, 32],
+			maxValue: 100,
+			krigingModel: 'exponential',//model还可选'gaussian','spherical'
+			krigingSigma2: 0,
+			krigingAlpha: 100,
+			canvasAlpha: 0.9,//canvas图层透明度
+      colors: ["#006837", "#1a9850", "#66bd63", "#a6d96a", "#d9ef8b", "#ffffbf","#fee08b", "#fdae61", "#f46d43", "#d73027", "#a50026"]
+    };
+    const baseLayer = new ol.layer.Tile({
+      source: new ol.source.OSM()
+    });
+    const map = new ol.Map({
+      target: 'map',
+      layers: [baseLayer],
+      view: new ol.View({
+        center: params.mapCenter,
+        projection: 'EPSG:4326',
+        zoom: 15
+      })
+    });
+    const view = map.getView();
+
+    const source = new ol.source.Vector();
+    const layer = new ol.layer.Vector({
+      source: source,
+      style: function(feature,res){
+        //得到点的权重，计算落在那个色度带
+        const level = parseInt(feature.get('level'))/10;
+        const color = params.colors[level];
+        const style = new ol.style.Style({
+          fill: new ol.style.Fill({
+            color: color
+          }),
+          stroke: new ol.style.Stroke({
+            color: color,
+            width: 3
+          })
+        })
+        return [style];
+      },
+      opacity: 0.8,
+    });
+    map.addLayer(layer);
+    
+    //测试点geojson输入数据
+    const dataset = {
+      type: "FeatureCollection",
+      features: [
+        {"type":"Feature","properties":{"level":69.77363820922366},"geometry":{"type":"Point","coordinates":[117.95874974740398,32.01742340365348]}},
+        {"type":"Feature","properties":{"level":33.16954290876779},"geometry":{"type":"Point","coordinates":[117.98509478129648,32.01715672793027]}},
+        {"type":"Feature","properties":{"level":51.96816284256003},"geometry":{"type":"Point","coordinates":[118.0312111363289,31.99561450770899]}},
+        {"type":"Feature","properties":{"level":66.2735709240636},"geometry":{"type":"Point","coordinates":[118.03195257245697,31.981843211216894]}},
+        {"type":"Feature","properties":{"level":94.41381031574323},"geometry":{"type":"Point","coordinates":[118.04339771639475,32.02237972802848]}},
+        {"type":"Feature","properties":{"level":64.86433671647175},"geometry":{"type":"Point","coordinates":[117.97593805031529,32.03316428887434]}},
+        {"type":"Feature","properties":{"level":4.391153051583219},"geometry":{"type":"Point","coordinates":[117.99544403159764,32.00042328827524]}},
+        {"type":"Feature","properties":{"level":20.343706074230038},"geometry":{"type":"Point","coordinates":[117.9760132070444,32.04225362067357]}},
+        {"type":"Feature","properties":{"level":71.09388228038223},"geometry":{"type":"Point","coordinates":[117.99031244800868,32.00735903102423]}},
+        {"type":"Feature","properties":{"level":61.30419266807008},"geometry":{"type":"Point","coordinates":[118.03535958326607,32.00839396505765]}},
+        {"type":"Feature","properties":{"level":95.3644124722719},"geometry":{"type":"Point","coordinates":[118.02816603971984,32.036110423518714]}},
+        {"type":"Feature","properties":{"level":8.751475906480666},"geometry":{"type":"Point","coordinates":[118.01412772453565,31.951505180522478]}},
+        {"type":"Feature","properties":{"level":87.26519907770344},"geometry":{"type":"Point","coordinates":[118.02107530130597,31.956094007429062]}},
+        {"type":"Feature","properties":{"level":97.45170190354007},"geometry":{"type":"Point","coordinates":[117.95175127920739,32.021536711329915]}},
+        {"type":"Feature","properties":{"level":78.08434314737845},"geometry":{"type":"Point","coordinates":[118.0078899490163,31.955960123081912]}},
+        {"type":"Feature","properties":{"level":15.250989630733391},"geometry":{"type":"Point","coordinates":[118.00905348953779,32.00579685265856]}},
+        {"type":"Feature","properties":{"level":28.38837287106022},"geometry":{"type":"Point","coordinates":[117.96189344935293,31.990507533467788]}},
+        {"type":"Feature","properties":{"level":96.4807815494852},"geometry":{"type":"Point","coordinates":[118.0406563576941,31.985574117581013]}},
+        {"type":"Feature","properties":{"level":82.55132885275967},"geometry":{"type":"Point","coordinates":[118.04246082776052,31.974192118739555]}},
+        {"type":"Feature","properties":{"level":1.3607242213821147},"geometry":{"type":"Point","coordinates":[117.96957197247828,31.950711979749745]}}
+      ]
+    };
+
+    // //创建10个位置随机、属性值随机的特征点
+    // for (let i = 0; i < 20; i++) {
+    //   const feature = {
+    //     type: "Feature",
+    //     properties: {
+    //       level: Math.random()*100
+    //     },
+    //     geometry: {
+    //       type: "Point",
+    //       coordinates: [params.mapCenter[0]+Math.random()*0.1-.05, params.mapCenter[1]+Math.random()*0.1-.05]
+    //     }
+    //   };
+    //   dataset.features.push(feature);
+    // }
+    // console.log(dataset)
+    //计算克里金等值面
+    const kriging_contours = freegis.kriging_contour(dataset,'level',{
+      model: 'spherical',
+      sigma2: 0,
+      alpha: 100
+    },[0,10,20,30,40,50,60,70,80,90,100]);
+    const format = new ol.format.GeoJSON();
+    const features = format.readFeatures(kriging_contours);
+    source.addFeatures(features);
+    </script>
+  </body>
+</html>
