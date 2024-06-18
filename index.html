@@ -39,7 +39,12 @@
       colors: ["#006837", "#1a9850", "#66bd63", "#a6d96a", "#d9ef8b", "#ffffbf","#fee08b", "#fdae61", "#f46d43", "#d73027", "#a50026"]
     };
     const baseLayer = new ol.layer.Tile({
-      source: new ol.source.OSM()
+      // source: new ol.source.OSM(),
+      source: new ol.source.XYZ({
+        url: "http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7",
+        // url: 'http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=2&style=6',
+        crossOrigin: "anonymous",
+      }),
     });
     const map = new ol.Map({
       target: 'map',
@@ -70,7 +75,7 @@
         })
         return [style];
       },
-      opacity: 0.8,
+      opacity: 0.7,
     });
     map.addLayer(layer);
     
