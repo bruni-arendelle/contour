@@ -41,8 +41,8 @@
     const baseLayer = new ol.layer.Tile({
       // source: new ol.source.OSM(),
       source: new ol.source.XYZ({
-        url: "http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=7",
-        // url: 'http://wprd0{1-4}.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=2&style=6',
+        url: "http://wprd03.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=6",
+        // url: 'http://wprd03.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=2&style=6',
         crossOrigin: "anonymous",
       }),
     });
@@ -130,6 +130,37 @@
     const format = new ol.format.GeoJSON();
     const features = format.readFeatures(kriging_contours);
     source.addFeatures(features);
+
+    const points = []
+    dataset.features.forEach(x => {
+      const point = new ol.Feature({
+        geometry: new ol.geom.Point([x.geometry.coordinates[0], x.geometry.coordinates[1]])
+      })
+      const style = new ol.style.Style({
+          text: new ol.style.Text({
+              font: 'normal 12px 黑体',
+              // // 对其方式
+              textAlign: 'center',
+              // 基准线
+              textBaseline: 'middle',
+              offsetY: -35,
+              offsetX: 0,
+              backgroundFill: new ol.style.Stroke({
+                  color: 'rgba(0,0,255,0.7)',
+              }),
+              // 文本填充样式
+              fill: new ol.style.Fill({
+                  color: 'rgba(236,218,20,1)'
+              }),
+              padding: [5, 5, 5, 5],
+              text: `${x.properties.level.toFixed(3)}`,
+          })
+      })
+      point.setStyle(style);
+      // points.push(point)
+      source.addFeature(point)
+    })
+    
     </script>
   </body>
 </html>
